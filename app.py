@@ -12,10 +12,10 @@ from sklearn.metrics import accuracy_score
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 
-st.set_page_config(page_title="DataDive", page_icon=":bar_chart:",layout="wide")
+st.set_page_config(page_title="DataDive", page_icon=":bar_chart:", layout="wide")
 
-st.title(" Transforming spreadsheets into insights")
-st.markdown('<style>div.block-container{padding-top:2rem;}</style>',unsafe_allow_html=True)
+st.title("Transforming spreadsheets into insights")
+st.markdown('<style>div.block-container{padding-top:2rem;}</style>', unsafe_allow_html=True)
 
 def load_data():
     uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xlsx"])
@@ -28,15 +28,16 @@ def load_data():
     return None
 
 def plot_2d(data, method='PCA'):
+    data_for_plotting = data.drop(columns=['InvoiceNo', 'StockCode', 'Description', 'InvoiceDate', 'CustomerID', 'Country'])
     if method == 'PCA':
         pca = PCA(n_components=2)
-        components = pca.fit_transform(data.iloc[:, :-1])
+        components = pca.fit_transform(data_for_plotting)
     else:
         tsne = TSNE(n_components=2)
-        components = tsne.fit_transform(data.iloc[:, :-1])
+        components = tsne.fit_transform(data_for_plotting)
 
     fig, ax = plt.subplots()
-    scatter = ax.scatter(components[:, 0], components[:, 1], c=data.iloc[:, -1], cmap='viridis')
+    scatter = ax.scatter(components[:, 0], components[:, 1], c=data['Country'].astype('category').cat.codes, cmap='viridis')
     legend = ax.legend(*scatter.legend_elements(), title="Classes")
     ax.add_artist(legend)
     st.pyplot(fig)
@@ -48,8 +49,9 @@ def eda_plots(data):
     st.area_chart(data.isnull().sum())
 
 def classification(data):
-    X = data.iloc[:, :-1]
-    y = data.iloc[:, -1]
+    data_for_classification = data.drop(columns=['InvoiceNo', 'StockCode', 'Description', 'InvoiceDate', 'CustomerID', 'Country'])
+    X = data_for_classification
+    y = data['Country'].astype('category').cat.codes
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
     st.subheader("Classification")
@@ -70,7 +72,8 @@ def classification(data):
     st.write(f"SVM Accuracy: {acc_svm}")
 
 def clustering(data):
-    X = data.iloc[:, :-1]
+    data_for_clustering = data.drop(columns=['InvoiceNo', 'StockCode', 'Description', 'InvoiceDate', 'CustomerID', 'Country'])
+    X = data_for_clustering
 
     st.subheader("Clustering")
 
@@ -119,4 +122,5 @@ if data is not None:
 
     with tab4:
         clustering(data)
+
 
